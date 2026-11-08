@@ -1,0 +1,32 @@
+# ============================================================
+# Industrial Vision SLM Benchmark
+# Configuration initiale du projet
+# ============================================================
+
+# Infos générales
+project:
+  name: industrial-vision-slm-benchmark
+  seed: 42
+
+# Small Language Model
+model:
+  id: Qwen/Qwen3-1.7B
+  device: cuda
+  dtype: float16
+
+# Paramètres de génération
+generation:
+  max_new_tokens: 256
+  do_sample: false
+  enable_thinking: false
+
+# Paramètres initiaux du RAG
+rag:
+  chunk_size_tokens: 400
+  chunk_overlap_tokens: 60
+  top_k: 3
+
+# Répertoires relatifs au projet
+paths:
+  data_dir: data
+  outputs_dir: outputs

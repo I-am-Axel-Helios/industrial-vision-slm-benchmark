@@ -1,0 +1,34 @@
+# ============================================================
+# Industrial Vision SLM Benchmark
+# Dépendances Python
+# ============================================================
+
+# Deep Learning
+# PyTorch GPU est déjà fourni par notre runtime Colab.
+# Version observée : 2.14.1+cu130
+torch
+
+# Modèles de langage Hugging Face
+transformers==5.22.1
+accelerate==1.15.0
+
+# Gestion des datasets
+datasets==4.8.5
+
+# Embeddings et recherche vectorielle
+sentence-transformers==5.7.0
+faiss-cpu==1.15.1
+
+# Lecture de documents PDF
+pypdf==7.0.0
+
+# Adaptation des modèles (LoRA / QLoRA)
+peft==0.21.2
+bitsandbytes==0.50.0
+
+# Lecture des configurations YAML
+PyYAML>=6.0,<7.0
+
+# Dépendances prévues ultérieurement
+# trl       : SFT & DPO
+# streamlit : interface utilisateur

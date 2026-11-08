@@ -1,0 +1,41 @@
+# ============================================================
+# Industrial Vision SLM Benchmark - Git Ignore
+# ============================================================
+
+# Environnements virtuels Python
+.venv/
+venv/
+env/
+
+# Fichiers temporaires Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Fichiers temporaires Jupyter
+.ipynb_checkpoints/
+
+# Secrets et variables d'environnement
+.env
+.env.*
+!.env.example
+*.key
+*token*.txt
+
+# Données locales et résultats volumineux
+/data/*
+!/data/.gitkeep
+
+/outputs/*
+!/outputs/.gitkeep
+
+# Poids de modèles et checkpoints
+*.safetensors
+*.ckpt
+*.pth
+*.pt
+
+# Fichiers temporaires du système
+.DS_Store
+Thumbs.db
+
