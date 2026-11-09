@@ -1,21 +1,27 @@
-# Industrial Vision SLM Benchmark
+# Industrial Vision SLM Benchma
+
+[English](README.md) | [Français](README.fr.md)
 
 ## Description
 
-Projet personnel consacré à la spécialisation d'un Small Language Model (SLM) pour le traitement d'images et la vision industrielle.
+Personal and academic project focused on specializing
+a Small Language Model (SLM) for image processing
+and industrial computer vision.
 
-L'objectif est d'étudier et de comparer différentes méthodes d'adaptation d'un modèle de langage à un domaine technique.
+The objective is to investigate and compare different
+approaches to adapting a language model to a
+specialized technical domain.
 
-## Objectifs
+## Objectives
 
-- Construire un corpus documentaire spécialisé en Computer Vision.
-- Évaluer un Small Language Model préentraîné.
-- Développer un pipeline RAG avec recherche vectorielle.
-- Réaliser un fine-tuning supervisé avec QLoRA.
-- Comparer les performances des différentes approches.
-- Étudier l'optimisation par préférences (DPO), si réalisable.
+- Build a specialized computer vision document corpus.
+- Evaluate a pretrained Small Language Model.
+- Develop a RAG pipeline with vector retrieval.
+- Perform supervised fine-tuning using QLoRA.
+- Compare the performance of different approaches.
+- Explore preference optimization (DPO), if feasible.
 
-## Technologies prévues
+## Planned Technologies
 
 - Python
 - PyTorch
@@ -26,23 +32,44 @@ L'objectif est d'étudier et de comparer différentes méthodes d'adaptation d'u
 - Google Colab (NVIDIA T4)
 - Streamlit
 
-## Modèle de départ
+## Base Model
 
 Qwen3-1.7B (`Qwen/Qwen3-1.7B`)
 
-## Organisation
+## Project Structure
 
-- `configs/` : configurations des expériences.
-- `notebooks/` : notebooks d'expérimentation.
-- `src/` : code Python du projet.
-- `data/` : données et corpus documentaires.
-- `outputs/` : résultats, métriques et modèles entraînés.
-- `tests/` : tests automatisés.
+- `configs/`: experiment configurations.
+- `notebooks/`: experimental notebooks.
+- `src/`: reusable Python source code.
+- `data/`: datasets and document corpora.
+- `outputs/`: results, metrics and trained adapters.
+- `tests/`: automated tests.
+- `docs/`: technical documentation and protocols.
 
-## État du projet
+## Project Status
 
-En développement — préparation de l'environnement.
+In development.
 
-## Résultats
+Completed:
+- Colab GPU environment setup.
+- Qwen3-1.7B tokenizer and model loading.
+- Initial inference and GPU performance measurements.
 
-Les résultats expérimentaux seront ajoutés après les évaluations.
+In progress:
+- Evaluation dataset and scoring protocol.
+
+Planned:
+- Document corpus construction.
+- RAG implementation and evaluation.
+- QLoRA fine-tuning.
+- Preference optimization, if feasible.
+
+## Results
+
+The first inference experiments have been completed.
+The full comparative benchmark is pending.
+
+## Documentation
+
+- [Evaluation Protocol](docs/evaluation_protocol.md)
+- [Protocole d'évaluation](docs/evaluation_protocol.fr.md)

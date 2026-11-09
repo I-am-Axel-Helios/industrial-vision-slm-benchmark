@@ -23,8 +23,17 @@ __pycache__/
 *token*.txt
 
 # Données locales et résultats volumineux
+# Ignorer les données volumineuses
 /data/*
+
+# Conserver le dossier racine dans Git
 !/data/.gitkeep
+
+# Autoriser uniquement notre jeu d'évaluation public
+!/data/evaluation/
+/data/evaluation/*
+!/data/evaluation/questions.jsonl
+
 
 /outputs/*
 !/outputs/.gitkeep
