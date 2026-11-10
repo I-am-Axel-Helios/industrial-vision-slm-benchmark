@@ -1,4 +1,4 @@
-# Industrial Vision SLM Benchma
+# Industrial Vision SLM Benchmark
 
 [English](README.md) | [Français](README.fr.md)
 

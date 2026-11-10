@@ -2,7 +2,7 @@ import unittest
 
 from src.validate_evaluation_dataset import validate_question
 
-class TestEvaluationVaidator(unittest.TestCase):
+class TestEvaluationValidator(unittest.TestCase):
     """Tester la validation des questions d'évaluation"""
 
     def setUp(self):
