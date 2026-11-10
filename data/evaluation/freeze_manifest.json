@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "dataset": "data/evaluation/questions.jsonl",
+  "refernce_documentation": "OpenCV 4.13.0",
+  "question_count": 50,
+  "dev_count": 10,
+  "test_count": 40,
+  "dataset_content_sha256": "7760ad2de857caa6bdcce3126d8586ee85882a4bd29c6c70678e04637ddc21c6",
+  "test_content_sha256": "a22c73a0fe9954eddbbc06fb191a38cbf166496dd718b9300d8909384dc97559"
+}

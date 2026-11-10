@@ -33,6 +33,7 @@ __pycache__/
 !/data/evaluation/
 /data/evaluation/*
 !/data/evaluation/questions.jsonl
+!/data/evaluation/freeze_manifest.json
 
 
 /outputs/*

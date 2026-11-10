@@ -145,7 +145,7 @@ def main():
     print("[OK] Aucun ID dupliqué.")
     print("[OK] Aucune question identique.")
 
-    print("\n[OK] Validation terminée avec succès.")
+    print("\n[OK] Validation terminée avec succès.\n")
 
     return 0
 
@@ -153,6 +153,5 @@ def main():
 # ------------------------------------------------------------
 # 4. Point d'entrée du programme
 # ------------------------------------------------------------
-
 if __name__ == "__main__":
     sys.exit(main())
