@@ -106,35 +106,112 @@ guarantee the correctness of every reference answer.
 
 ## Project Status
 
-In development.
+**Current milestone: Baseline evaluation completed**
 
 ### Completed
-- Project repository and development environment
-- Google Colab GPU setup
-- Qwen3-1.7B initial inference experiments
-- Initial latency and GPU memory measurements
-- Evaluation protocol and bilingual documentation
-- 50-question OpenCV evaluation dataset
-- Dataset validator, unit tests, and audit
-- Dataset freezing with SHA-256 verification
+- Google Colab GPU environment setup.
+- Qwen3-1.7B tokenizer and model initialization.
+- Initial inference and GPU performance measurements.
+- Construction and validation of a 50-question evaluation dataset.
+- Frozen development/test split: 10 development and 40 test questions.
+- Definition of the manual evaluation protocol.
+- Comparison of two prompting strategies on the development set.
+- Selection and locking of prompt V1 before test evaluation.
+- Baseline inference on all 40 test questions.
+- Manual quality assessment and performance analysis.
+- Validation and persistence of final benchmark results.
 
-### Current Phase
-Section 10 — Baseline evaluation of Qwen3-1.7B.
 
 ### Next Steps
-1. Run baseline inference on the development questions.
-2. Implement reproducible inference and metric logging.
-3. Evaluate the frozen test split.
-4. Develop the RAG pipeline.
-5. Explore QLoRA fine-tuning and optional DPO.
-6. Compare quality, latency, and GPU memory usage.
+1. Build a specialized computer vision document corpus.
+2. Implement and evaluate a Retrieval-Augmented Generation (RAG) pipeline.
+3. Fine-tune the base model using LoRA/QLoRA.
+4. Compare baseline, RAG, and fine-tuned configurations.
+5. Explore preference optimization (DPO), if feasible.
+
+## Baseline Evaluation
+
+The baseline was evaluated using the pretrained
+`Qwen/Qwen3-1.7B` model without RAG or fine-tuning.
+
+**Experimental configuration:**
+
+- Model: Qwen3-1.7B.
+- Precision: FP16.
+- Hardware: NVIDIA Tesla T4.
+- Prompt: V1, selected using development questions only.
+- Generation: deterministic, with thinking mode disabled.
+- Maximum generation length: 512 new tokens.
+- Evaluation dataset: 50 questions (10 development, 40 test).
+- Domains: filtering, segmentation, morphology, edges, and industrial inspection.
+
+Each test response was manually assessed using:
+
+- Technical accuracy: 0–3 points.
+- Completeness: 0–2 points.
+- Factual error: independent boolean indicator.
+
+The maximum test score is 200 points.
 
 ## Results
 
-The first inference experiments have been completed.
-The full comparative benchmark is pending.
+### Overall Test Performance
+
+| Metric | Result |
+|---|---:|
+| Evaluated questions | 40/40 |
+| Technical quality | 113/200 (56.5%) |
+| Responses flagged for factual errors | 31/40 (77.5%) |
+| Generations reaching the token limit | 9/40 (22.5%) |
+| Mean generation latency | 16.932 s |
+| Global generation throughput | 24.10 tokens/s |
+| Maximum observed PyTorch GPU memory | 3.31 GiB |
+
+### Quality by Domain
+
+| Domain | Score | Quality |
+|---|---:|---:|
+| Edges | 27/40 | 67.5% |
+| Filtering | 26/40 | 65.0% |
+| Industrial inspection | 25/40 | 62.5% |
+| Segmentation | 18/40 | 45.0% |
+| Morphology | 17/40 | 42.5% |
+
+### Key Findings
+
+- The pretrained model handles several general image-processing concepts correctly.
+- Important errors remain in OpenCV API usage, mathematical definitions, and morphological operations.
+- Morphology and segmentation achieved the lowest scores in this evaluation.
+- Long and fluent explanations do not necessarily imply technical correctness.
+- Reaching the generation limit is a potential source of incomplete answers.
+
+These findings are specific to the frozen 40-question test set and should not be interpreted as general estimates of model performance.
+
+## Reproducibility
+
+The evaluation resources include:
+
+- `data/evaluation/questions.jsonl`: evaluation questions and reference answers.
+- `data/evaluation/freeze_manifest.json`: frozen dataset metadata and checksums.
+- `notebooks/01_baseline_evaluation.ipynb`: baseline experiments and evaluation workflow.
+- `docs/evaluation_protocol.md`: evaluation methodology.
+- `docs/evaluation_protocol.fr.md`: French evaluation methodology.
+
+Experimental responses, metrics, and manual assessments were saved persistently to Google Drive under:
+
+`industrial-vision-slm-benchmark/outputs/baseline/`
+
+The finalized quality results are stored in:
+
+- `baseline_test_v1_quality_scores_final.json`
+- `baseline_test_v1_quality_summary.json`
+
+The locked configuration and test set will be preserved for future RAG and fine-tuning comparisons.
+
+**Limitations:** the test set is relatively small, quality scores rely on manual assessment, and runtime performance depends on the execution environment.
 
 ## Documentation
 
 - [Evaluation Protocol](docs/evaluation_protocol.md)
 - [Protocole d'évaluation](docs/evaluation_protocol.fr.md)
+- [Baseline Evaluation Notebook](notebooks/01_baseline_evaluation.ipynb)
