@@ -106,7 +106,9 @@ guarantee the correctness of every reference answer.
 
 ## Project Status
 
-**Current milestone: Baseline evaluation completed**
+**Current milestone:** Baseline evaluation and document corpus preparation completed.
+
+**Next phase:** Embeddings, vector indexing, and RAG retrieval evaluation.
 
 ### Completed
 - Google Colab GPU environment setup.
@@ -120,14 +122,19 @@ guarantee the correctness of every reference answer.
 - Baseline inference on all 40 test questions.
 - Manual quality assessment and performance analysis.
 - Validation and persistence of final benchmark results.
+- Construction and validation of the OpenCV document corpus.
+- Generation of 62 chunks and selection of 55 retrieval chunks.
+- Corpus integrity checks and reproducibility report.
 
 
 ### Next Steps
-1. Build a specialized computer vision document corpus.
-2. Implement and evaluate a Retrieval-Augmented Generation (RAG) pipeline.
-3. Fine-tune the base model using LoRA/QLoRA.
-4. Compare baseline, RAG, and fine-tuned configurations.
-5. Explore preference optimization (DPO), if feasible.
+1. Generate multilingual embeddings for the retrieval corpus.
+2. Build and evaluate a vector search index.
+3. Integrate retrieved context with Qwen3-1.7B.
+4. Compare baseline and RAG performance.
+5. Fine-tune the base model using LoRA/QLoRA.
+6. Compare baseline, RAG, and fine-tuned configurations.
+7. Explore preference optimization (DPO), if feasible.
 
 ## Baseline Evaluation
 
@@ -210,8 +217,116 @@ The locked configuration and test set will be preserved for future RAG and fine-
 
 **Limitations:** the test set is relatively small, quality scores rely on manual assessment, and runtime performance depends on the execution environment.
 
+## Document Corpus Preparation
+
+The project includes a specialized technical corpus built from the official OpenCV 4.13.0 documentation.
+
+The corpus was designed to provide external knowledge for the upcoming Retrieval-Augmented Generation (RAG) experiments.
+
+### Data Sources
+
+Seven OpenCV documentation pages were collected, covering five technical domains:
+
+- Image filtering
+- Mathematical morphology
+- Thresholding and segmentation
+- Edge detection and contour analysis
+- Industrial visual inspection
+
+The source registry records document identifiers, original URLs, processing paths, and SHA-256 checksums.
+
+### Processing Pipeline
+
+The corpus preparation follows this workflow:
+
+1. Download and verify the original HTML documents.
+2. Extract technical content using Beautiful Soup.
+3. Convert HTML into structured Markdown.
+4. Preserve headings, mathematical expressions,
+   and Python code examples.
+5. Apply hierarchical chunking based on Markdown sections.
+6. Validate chunk integrity and content preservation.
+7. Filter navigation, exercises, and reference-only passages.
+
+Missing illustrations are explicitly identified rather
+than replaced with invented descriptions.
+
+### Corpus Statistics
+
+| Metric | Result |
+|---|---:|
+| Source documents | 7 |
+| Technical domains | 5 |
+| Extracted characters | 42,335 |
+| Preserved Python code blocks | 26 |
+| Original chunks | 62 |
+| Preserved atomic blocks | 228/228 |
+| Excluded chunks | 7 |
+| Final retrieval chunks | 55 |
+
+### Chunking Configuration
+
+- Strategy: hierarchical section-based chunking.
+- Maximum chunk size: 1,500 characters.
+- Overlap: 0 characters.
+- Code blocks and mathematical expressions preserved.
+- Section headings repeated in each chunk.
+
+### Retrieval Corpus Distribution
+
+| Domain | Chunks |
+|---|---:|
+| Edges | 23 |
+| Filtering | 7 |
+| Industrial inspection | 6 |
+| Morphology | 10 |
+| Segmentation | 9 |
+| **Total** | **55** |
+
+The selected chunks have a mean length of 757.5
+characters and a median length of 808 characters.
+
+### Reproducibility
+
+The corpus pipeline is implemented in:
+
+`notebooks/02_document_corpus.ipynb`
+
+The generated metadata and manifests include:
+
+- `data/corpus/source_registry.json`
+- `data/corpus/chunk_manifest.json`
+- `data/corpus/retrieval_manifest.json`
+- `data/corpus/corpus_report.json`
+
+The pipeline also generates:
+
+- `data/corpus/chunks/chunks.jsonl`
+- `data/corpus/chunks/retrieval_chunks.jsonl`
+
+Generated document content is intended to remain local
+when excluded by `.gitignore`. The notebook and metadata
+document the preparation procedure.
+
+SHA-256 checks verify the integrity of source documents,
+processed documents, and the resulting corpora.
+
+### Limitations
+
+- The corpus contains only seven OpenCV documentation pages.
+- Domain coverage is not uniform.
+- Illustrations are not included in the text corpus.
+- Chunk sizes are measured in characters rather than tokens.
+- The retrieval filtering policy uses simple structural rules.
+- Retrieval relevance has not yet been evaluated.
+- No RAG inference results are available yet.
+
+The next phase will focus on embeddings, vector indexing,
+retrieval evaluation, and integration with Qwen3-1.7B.
+
 ## Documentation
 
 - [Evaluation Protocol](docs/evaluation_protocol.md)
 - [Protocole d'évaluation](docs/evaluation_protocol.fr.md)
 - [Baseline Evaluation Notebook](notebooks/01_baseline_evaluation.ipynb)
+- [Document Corpus Preparation Notebook](notebooks/02_document_corpus.ipynb)

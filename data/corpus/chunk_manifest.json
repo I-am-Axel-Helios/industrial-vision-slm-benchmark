@@ -1,0 +1,18 @@
+{
+  "chunk_count": 62,
+  "chunks_sha256": "c8dcd5a5aa74b5d4c6e2e6855c05f6669de99586407287d237cc1c22ba1040b8",
+  "max_chars": 1500,
+  "overlap_chars": 0,
+  "schema_version": 1,
+  "source_checksums": {
+    "opencv_canny": "271b771e4839707ba159d9d72454749581427690dbe87bcbbe9eb94f6291ec25",
+    "opencv_contours": "146879a66d5ab383d12b480a206d620e7d24a20790205d15ff60f741be4ce202",
+    "opencv_filtering": "e0c6b1573dfcb03a6b581f32eb544be968552237d26917a1195e809ccc171f04",
+    "opencv_gradients": "15c315cf16a1a7724b298e223d2265bf6ee36e8a7f3b723cc4f5387f995a7657",
+    "opencv_morphology": "2b6af7cc715bc13f39a3806bf3b278887190206641d1f01507a53a43c2aea1ed",
+    "opencv_template_matching": "1340e46484244443b7648b2498b66121440dc3d0168ac312eaace81315433a9b",
+    "opencv_thresholding": "c92d2cdd246e2e020c86a93b8454084d5174fb719563b294f1cc29384f93beda"
+  },
+  "source_count": 7,
+  "strategy": "markdown_sections_greedy_atomic"
+}

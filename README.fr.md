@@ -100,7 +100,9 @@ scientifique de chaque réponse de référence.
 
 ## État du projet
 
-**Étape actuelle : benchmark initial terminé.**
+**Étape actuelle :** évaluation initiale et préparation du corpus documentaire terminées.
+
+**Prochaine phase :** embeddings, indexation vectorielle et évaluation de la recherche RAG.
 
 ### Terminé
 - Configuration de l'environnement GPU Google Colab.
@@ -114,13 +116,18 @@ scientifique de chaque réponse de référence.
 - Génération des réponses aux 40 questions du jeu de test.
 - Évaluation manuelle de la qualité et analyse des performances.
 - Validation et sauvegarde des résultats définitifs.
+- Construction et validation du corpus documentaire OpenCV.
+- Génération de 62 chunks et sélection de 55 chunks pour le RAG.
+- Contrôles d'intégrité et rapport de reproductibilité du corpus.
 
 ### Prochaines étapes
-1. Construire un corpus documentaire spécialisé en Computer Vision.
-2. Développer et évaluer un pipeline RAG
-3. Adapter le modèle initial avec LoRA/QLoRA.
-4. Comparer la baseline, le RAG et le modèle fine-tuné.
-5. Étudier l'optimisation par préférences (DPO), si réalisable.
+1. Générer des embeddings multilingues du corpus documentaire.
+2. Construire et évaluer un index de recherche vectorielle.
+3. Intégrer les passages retrouvés à Qwen3-1.7B.
+4. Comparer les performances de la baseline et du RAG.
+5. Adapter le modèle initial avec LoRA/QLoRA.
+6. Comparer la baseline, le RAG et le modèle fine-tuné.
+7. Étudier l'optimisation par préférences (DPO), si réalisable.
 
 ## Évaluation du modèle initial
 
@@ -204,8 +211,129 @@ La configuration verrouillée et le jeu de test seront conservés pour comparer 
 **Limites :** le jeu de test est relativement petit, les notes reposent sur une évaluation manuelle et les performances d'exécution dépendent de l'environnement matériel.
 
 
+## Préparation du corpus documentaire
+
+Le projet comprend un corpus documentaire technique
+construit à partir de la documentation officielle
+OpenCV 4.13.0.
+
+Ce corpus a été conçu pour fournir des connaissances
+externes au futur système RAG
+(Retrieval-Augmented Generation).
+
+### Sources documentaires
+
+Sept pages de documentation OpenCV ont été collectées,
+couvrant cinq domaines techniques :
+
+- Filtrage d'images
+- Morphologie mathématique
+- Seuillage et segmentation
+- Détection et analyse de contours
+- Inspection visuelle industrielle
+
+Le registre documentaire conserve les identifiants,
+les URLs originales, les chemins des fichiers traités
+et leurs empreintes SHA-256.
+
+### Pipeline de préparation
+
+Le traitement documentaire comprend :
+
+1. Téléchargement et vérification des documents HTML.
+2. Extraction du contenu technique avec Beautiful Soup.
+3. Conversion du HTML en Markdown structuré.
+4. Préservation des titres, formules mathématiques
+   et exemples de code Python.
+5. Découpage hiérarchique basé sur les sections Markdown.
+6. Contrôle d'intégrité et de conservation du contenu.
+7. Filtrage des éléments de navigation, exercices
+   et références bibliographiques isolées.
+
+Les illustrations absentes sont explicitement signalées,
+sans générer de descriptions inventées.
+
+### Statistiques du corpus
+
+| Indicateur | Résultat |
+|---|---:|
+| Documents sources | 7 |
+| Domaines techniques | 5 |
+| Caractères extraits | 42 335 |
+| Blocs de code Python conservés | 26 |
+| Chunks originaux | 62 |
+| Blocs élémentaires conservés | 228/228 |
+| Chunks exclus | 7 |
+| Chunks retenus pour le RAG | 55 |
+
+### Configuration du chunking
+
+- Stratégie : découpage hiérarchique par sections.
+- Taille maximale : 1 500 caractères.
+- Chevauchement : 0 caractère.
+- Préservation du code et des expressions mathématiques.
+- Répétition du titre de section dans chaque chunk.
+
+### Répartition du corpus RAG
+
+| Domaine | Chunks |
+|---|---:|
+| Contours | 23 |
+| Filtrage | 7 |
+| Inspection industrielle | 6 |
+| Morphologie | 10 |
+| Segmentation | 9 |
+| **Total** | **55** |
+
+Les chunks retenus ont une longueur moyenne de
+757,5 caractères et une longueur médiane de
+808 caractères.
+
+### Reproductibilité
+
+Le pipeline documentaire est implémenté dans :
+
+`notebooks/02_document_corpus.ipynb`
+
+Les principaux fichiers de métadonnées sont :
+
+- `data/corpus/source_registry.json`
+- `data/corpus/chunk_manifest.json`
+- `data/corpus/retrieval_manifest.json`
+- `data/corpus/corpus_report.json`
+
+Le pipeline génère également :
+
+- `data/corpus/chunks/chunks.jsonl`
+- `data/corpus/chunks/retrieval_chunks.jsonl`
+
+Les contenus documentaires générés restent locaux
+lorsqu'ils sont exclus par `.gitignore`.
+Le notebook et les métadonnées décrivent leur préparation.
+
+Les contrôles SHA-256 permettent de vérifier l'intégrité
+des documents sources, des documents traités et des
+corpus produits.
+
+### Limites
+
+- Le corpus contient seulement sept pages OpenCV.
+- La couverture documentaire varie selon les domaines.
+- Les illustrations ne sont pas intégrées au corpus textuel.
+- La taille des chunks est mesurée en caractères,
+  et non en tokens.
+- Le filtrage repose sur des règles structurelles simples.
+- La pertinence du retrieval n'a pas encore été évaluée.
+- Aucun résultat d'inférence RAG n'est encore disponible.
+
+La prochaine phase sera consacrée aux embeddings,
+à l'indexation vectorielle, à l'évaluation du retrieval
+et à l'intégration avec Qwen3-1.7B.
+
+
 ## Documentation
 
 - [Evaluation Protocol](docs/evaluation_protocol.md)
 - [Protocole d'évaluation](docs/evaluation_protocol.fr.md)
 - [Notebook d'évaluation de la baseline](notebooks/01_baseline_evaluation.ipynb)
+- [Notebook de préparation du corpus documentaire](notebooks/02_document_corpus.ipynb)

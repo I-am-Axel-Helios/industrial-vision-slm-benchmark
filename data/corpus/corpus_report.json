@@ -1,0 +1,36 @@
+{
+  "checksums": {
+    "original_chunks": "c8dcd5a5aa74b5d4c6e2e6855c05f6669de99586407287d237cc1c22ba1040b8",
+    "retrieval_chunks": "a069f2aa8944165dd90b97b784b065c0507a1bd98b88cea3227df57726052920"
+  },
+  "chunking": {
+    "max_chars": 1500,
+    "overlap_chars": 0,
+    "strategy": "markdown_sections_greedy_atomic"
+  },
+  "corpus_name": "industrial_vision_opencv",
+  "excluded_chunk_count": 7,
+  "exclusions_by_reason": {
+    "additional resources": 4,
+    "exercises": 2,
+    "navigation": 1
+  },
+  "opencv_version": "4.13.0",
+  "original_chunk_count": 62,
+  "retrieval_chunk_count": 55,
+  "retrieval_chunk_lengths": {
+    "maximum": 1475,
+    "mean": 757.5,
+    "median": 808,
+    "minimum": 109
+  },
+  "retrieval_chunks_by_topic": {
+    "edges": 23,
+    "filtering": 7,
+    "industrial_inspection": 6,
+    "morphology": 10,
+    "segmentation": 9
+  },
+  "schema_version": 1,
+  "source_count": 7
+}

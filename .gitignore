@@ -35,7 +35,7 @@ __pycache__/
 !/data/evaluation/questions.jsonl
 !/data/evaluation/freeze_manifest.json
 
-
+# Résultats des expérimentations
 /outputs/*
 !/outputs/.gitkeep
 
@@ -49,3 +49,20 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Corpus documentaire local : fichiers sources et dérivés.
+# Autoriser l'accès au dossier du corpus.
+!/data/corpus/
+
+# Ignorer son contenu par défaut.
+/data/corpus/*
+
+# Conserver les métadonnées de reproductibilité.
+!/data/corpus/source_registry.json
+!/data/corpus/chunk_manifest.json
+!/data/corpus/retrieval_manifest.json
+!/data/corpus/corpus_report.json
+
+# Exclure explicitement les documents et chunks générés.
+/data/corpus/raw/
+/data/corpus/processed/
+/data/corpus/chunks/

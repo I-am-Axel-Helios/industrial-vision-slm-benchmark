@@ -1,0 +1,39 @@
+{
+  "excluded_chunks": [
+    {
+      "chunk_id": "opencv_filtering_chunk_008",
+      "reason": "additional resources"
+    },
+    {
+      "chunk_id": "opencv_morphology_chunk_011",
+      "reason": "additional resources"
+    },
+    {
+      "chunk_id": "opencv_thresholding_chunk_010",
+      "reason": "additional resources"
+    },
+    {
+      "chunk_id": "opencv_thresholding_chunk_011",
+      "reason": "exercises"
+    },
+    {
+      "chunk_id": "opencv_contours_chunk_001",
+      "reason": "navigation"
+    },
+    {
+      "chunk_id": "opencv_canny_chunk_006",
+      "reason": "additional resources"
+    },
+    {
+      "chunk_id": "opencv_canny_chunk_007",
+      "reason": "exercises"
+    }
+  ],
+  "excluded_count": 7,
+  "original_chunks_sha256": "c8dcd5a5aa74b5d4c6e2e6855c05f6669de99586407287d237cc1c22ba1040b8",
+  "original_count": 62,
+  "retrieval_chunks_sha256": "a069f2aa8944165dd90b97b784b065c0507a1bd98b88cea3227df57726052920",
+  "schema_version": 1,
+  "selected_count": 55,
+  "selection_policy": "retrieval_filter_v1"
+}
