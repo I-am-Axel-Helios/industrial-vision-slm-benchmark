@@ -32,6 +32,7 @@ __pycache__/
 # Autoriser uniquement notre jeu d'évaluation public
 !/data/evaluation/
 /data/evaluation/*
+!/data/evaluation/retrieval_qrels_dev.json
 !/data/evaluation/questions.jsonl
 !/data/evaluation/freeze_manifest.json
 

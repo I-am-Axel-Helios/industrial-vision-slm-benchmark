@@ -106,9 +106,10 @@ guarantee the correctness of every reference answer.
 
 ## Project Status
 
-**Current milestone:** Baseline evaluation and document corpus preparation completed.
+**Current milestone:** Baseline evaluation, OpenCV corpus preparation, and semantic retrieval evaluation completed.
 
-**Next phase:** Embeddings, vector indexing, and RAG retrieval evaluation.
+**Next phase:** Integrate retrieved evidence and source citations with Qwen3-1.7B to build and evaluate the RAG pipeline.
+
 
 ### Completed
 - Google Colab GPU environment setup.
@@ -125,16 +126,24 @@ guarantee the correctness of every reference answer.
 - Construction and validation of the OpenCV document corpus.
 - Generation of 62 chunks and selection of 55 retrieval chunks.
 - Corpus integrity checks and reproducibility report.
+- Multilingual E5 embeddings generated and saved for the 55 retrieval chunks (384 dimensions).
+- Two overlength chunks handled with documented token-window embedding aggregation.
+- Exact FAISS `IndexFlatIP` search validated against NumPy and saved with integrity checks.
+- Configurable Top-k retrieval and OpenCV source tracing implemented.
+- Development evaluation split loaded (10 questions); test split kept for final assessment (40 questions).
+- Completed relevance annotation for 10 development questions across 55 chunks, totaling 550 judgments.
+- Evaluated retrieval using Precision@k, Recall@k, and MRR for k = 1, 3, and 5.
+- Analyzed ranking errors and identified document coverage limitations.
 
 
 ### Next Steps
-1. Generate multilingual embeddings for the retrieval corpus.
-2. Build and evaluate a vector search index.
-3. Integrate retrieved context with Qwen3-1.7B.
-4. Compare baseline and RAG performance.
-5. Fine-tune the base model using LoRA/QLoRA.
-6. Compare baseline, RAG, and fine-tuned configurations.
-7. Explore preference optimization (DPO), if feasible.
+
+1. Integrate retrieved evidence and source citations with Qwen3-1.7B.
+2. Evaluate RAG and compare it against the frozen baseline.
+3. Fine-tune the base model using LoRA/QLoRA.
+4. Compare baseline, RAG, and fine-tuned configurations.
+5. Explore preference optimization (DPO), if feasible.
+
 
 ## Baseline Evaluation
 
@@ -221,7 +230,10 @@ The locked configuration and test set will be preserved for future RAG and fine-
 
 The project includes a specialized technical corpus built from the official OpenCV 4.13.0 documentation.
 
-The corpus was designed to provide external knowledge for the upcoming Retrieval-Augmented Generation (RAG) experiments.
+The corpus has been embedded, indexed, and evaluated on the development split. Results demonstrate effective retrieval of directly relevant passages when available, while highlighting ranking errors and incomplete document coverage.
+
+Integration with Qwen3-1.7B remains future work.
+
 
 ### Data Sources
 
@@ -242,8 +254,7 @@ The corpus preparation follows this workflow:
 1. Download and verify the original HTML documents.
 2. Extract technical content using Beautiful Soup.
 3. Convert HTML into structured Markdown.
-4. Preserve headings, mathematical expressions,
-   and Python code examples.
+4. Preserve headings, mathematical expressions, and Python code examples.
 5. Apply hierarchical chunking based on Markdown sections.
 6. Validate chunk integrity and content preservation.
 7. Filter navigation, exercises, and reference-only passages.
@@ -283,8 +294,7 @@ than replaced with invented descriptions.
 | Segmentation | 9 |
 | **Total** | **55** |
 
-The selected chunks have a mean length of 757.5
-characters and a median length of 808 characters.
+The selected chunks have a mean length of 757.5 characters and a median length of 808 characters.
 
 ### Reproducibility
 
@@ -304,9 +314,7 @@ The pipeline also generates:
 - `data/corpus/chunks/chunks.jsonl`
 - `data/corpus/chunks/retrieval_chunks.jsonl`
 
-Generated document content is intended to remain local
-when excluded by `.gitignore`. The notebook and metadata
-document the preparation procedure.
+Generated document content is intended to remain local when excluded by `.gitignore`. The notebook and metadata document the preparation procedure.
 
 SHA-256 checks verify the integrity of source documents,
 processed documents, and the resulting corpora.
@@ -318,11 +326,109 @@ processed documents, and the resulting corpora.
 - Illustrations are not included in the text corpus.
 - Chunk sizes are measured in characters rather than tokens.
 - The retrieval filtering policy uses simple structural rules.
-- Retrieval relevance has not yet been evaluated.
+- Retrieval has been evaluated on ten development questions, but its performance on the held-out test split has not yet been measured.
 - No RAG inference results are available yet.
 
-The next phase will focus on embeddings, vector indexing,
-retrieval evaluation, and integration with Qwen3-1.7B.
+## Semantic Retrieval Engine (Development Evaluation Completed)
+
+The retrieval pipeline is implemented in `notebooks/03_retrieval_evaluation.ipynb`.
+
+It searches the **55 selected OpenCV chunks** using a multilingual text encoder and an exact vector index.
+
+### Implemented Pipeline
+
+1. Encode French queries and English OpenCV passages with `intfloat/multilingual-e5-small`.
+2. Use the required `query: ` and `passage: ` prefixes; normalize embeddings to unit length.
+3. Generate **55 embeddings of 384 dimensions** on CPU.
+4. Handle two passages exceeding the 512-token input limit through token windows and length-weighted embedding aggregation, without changing the original corpus.
+5. Build an exact FAISS `IndexFlatIP` index; verify its Top-3 ranking and scores against an exhaustive NumPy search.
+6. Save and reload embeddings, chunk identifiers, and the FAISS index with SHA-256 integrity checks and idempotent writes.
+7. Implement reusable Top-k retrieval and attach source titles, sections, official OpenCV URLs, and `[S1]`-style citations.
+
+**Exploratory checks:** Top-1, Top-3, and Top-5 retrieval was verified for three technical questions (nine searches total).
+
+Rankings were stable across k values. These checks confirm implementation consistency, document relevance was subsequently evaluated quantitatively on the development split.
+
+### Observed Ranking Limitations
+
+Some first-ranked passages were only indirectly related to the question:
+
+| Exploratory question | First-ranked section | Similarity |
+|---|---|---:|
+| Morphological erosion | Morphology — Theory | 0.8508 |
+| Gaussian filtering before Canny | Filtering — Bilateral Filtering | 0.8457 |
+| Template matching | Contours Hierarchy — RETR_CCOMP | 0.8281 |
+
+Similarity scores are **not relevance probabilities**.
+
+
+### Quantitative Retrieval Evaluation
+
+The frozen evaluation dataset contains **50 questions**: **10 development** and **40 held-out test** questions.
+
+All ten development questions were annotated across the 55 document chunks, producing **550 relevance judgments** stored in `data/evaluation/retrieval_qrels_dev.json`.
+
+Two relevance conventions were evaluated:
+
+- **Main:** grades 1 and 2 are relevant.
+- **Strict:** only grade 2 is relevant.
+
+Metrics were computed at k = 1, 3, and 5.
+
+| Metric | Top-1 | Top-3 | Top-5 |
+|---|---:|---:|---:|
+| Overall Precision — main | 0.5000 | 0.3000 | 0.2400 |
+| Conditional macro Recall — main | 0.3021 | 0.4583 | 0.6250 |
+| Conditional MRR — main | 0.6250 | 0.7292 | 0.7604 |
+| Overall Precision — strict | 0.4000 | 0.2000 | 0.1400 |
+| Conditional macro Recall — strict | 0.5714 | 0.8571 | 1.0000 |
+| Conditional MRR — strict | 0.5714 | 0.6905 | 0.7262 |
+
+**Document coverage:**
+
+- Main convention: 8 of 10 questions covered.
+- Strict convention: 7 of 10 questions covered.
+- CV008: only partially relevant passages available.
+- CV009 and CV010: no relevant passages identified.
+
+At k = 5, all **7 directly relevant passages** were retrieved for questions with directly relevant evidence.
+
+Under the main convention, **12 of 21 relevant question-chunk pairs** were retrieved within the Top-5, corresponding to a micro Recall of 57.14%.
+
+Conditional Recall and MRR exclude questions with no relevant passage. Overall Precision includes all ten development questions.
+
+### Ranking Analysis and Limitations
+
+Qualitative evaluation identified several ranking issues:
+
+- CV001: the directly relevant passage ranked second.
+- CV002: the directly relevant passage ranked third.
+- CV007: the Canny hysteresis explanation ranked fourth, behind less relevant passages.
+
+These findings highlight the trade-off between document recall and irrelevant context as retrieval depth increases.
+
+**Limitations:**
+
+- Evaluation based on only ten questions.
+- Human relevance judgments without independent inter-annotator validation.
+- Incomplete document coverage.
+- No isolated evaluation of long-passage embedding aggregation.
+- RAG answer quality has not yet been measured.
+
+Similarity scores are not relevance probabilities.
+
+The **40 held-out test questions** were not used
+to tune retrieval.
+
+### Reproducibility
+
+Development relevance judgments are versioned in `data/evaluation/retrieval_qrels_dev.json`.
+
+Generated embeddings, chunk identifiers, and the FAISS index remain local in the Git-ignored `outputs/retrieval/` directory.
+
+The notebook documents SHA-256 integrity checks, idempotent saves, retrieval experiments, and evaluation metrics.
+
+**Next milestone:** integrate the retrieval engine with Qwen3-1.7B and compare generated answers with and without retrieved evidence.
 
 ## Documentation
 
@@ -330,3 +436,4 @@ retrieval evaluation, and integration with Qwen3-1.7B.
 - [Protocole d'évaluation](docs/evaluation_protocol.fr.md)
 - [Baseline Evaluation Notebook](notebooks/01_baseline_evaluation.ipynb)
 - [Document Corpus Preparation Notebook](notebooks/02_document_corpus.ipynb)
+- [Semantic Retrieval and Evaluation Notebook](notebooks/03_retrieval_evaluation.ipynb)

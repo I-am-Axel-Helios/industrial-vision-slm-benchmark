@@ -89,20 +89,15 @@ python -m unittest discover -s tests -p "test_*.py" -v
 python src/freeze_evaluation_dataset.py verify
 ```
 
-Les questions de test ne doivent pas être utilisées
-pour entraîner le modèle, optimiser les prompts ou
-sélectionner les hyperparamètres.
+Les questions de test ne doivent pas être utilisées pour entraîner le modèle, optimiser les prompts ou sélectionner les hyperparamètres.
 
-Ces contrôles garantissent la cohérence structurelle
-et permettent de détecter les modifications du dataset
-figé. Ils ne garantissent pas, à eux seuls, l'exactitude
-scientifique de chaque réponse de référence.
+Ces contrôles garantissent la cohérence structurelle et permettent de détecter les modifications du dataset figé. Ils ne garantissent pas, à eux seuls, l'exactitude scientifique de chaque réponse de référence.
 
 ## État du projet
 
-**Étape actuelle :** évaluation initiale et préparation du corpus documentaire terminées.
+**Étape actuelle :** évaluation initiale, construction du corpus documentaire et évaluation du moteur de recherche sémantique terminées.
 
-**Prochaine phase :** embeddings, indexation vectorielle et évaluation de la recherche RAG.
+**Prochaine phase :** intégrer les passages retrouvés et leurs citations à Qwen3-1.7B pour construire et évaluer le pipeline RAG.
 
 ### Terminé
 - Configuration de l'environnement GPU Google Colab.
@@ -119,15 +114,22 @@ scientifique de chaque réponse de référence.
 - Construction et validation du corpus documentaire OpenCV.
 - Génération de 62 chunks et sélection de 55 chunks pour le RAG.
 - Contrôles d'intégrité et rapport de reproductibilité du corpus.
+- Génération et sauvegarde de 55 embeddings multilingues E5 de 384 dimensions.
+- Traitement documenté de deux chunks trop longs par fenêtres de tokens et agrégation des embeddings.
+- Recherche exacte `IndexFlatIP` avec FAISS, comparée à NumPy et sauvegardée avec contrôles d'intégrité.
+- Recherche Top-k paramétrable et traçabilité des sources OpenCV.
+- Chargement des 10 questions de développement ; jeu test de 40 questions réservé à l'évaluation finale.
+- Annotation de 10 questions de développement sur 55 chunks, soit 550 jugements de pertinence.
+- Évaluation quantitative du retrieval avec Precision@k, Recall@k et MRR pour k = 1, 3 et 5.
+- Analyse des erreurs de classement et identification des limites de couverture documentaire.
 
 ### Prochaines étapes
-1. Générer des embeddings multilingues du corpus documentaire.
-2. Construire et évaluer un index de recherche vectorielle.
-3. Intégrer les passages retrouvés à Qwen3-1.7B.
-4. Comparer les performances de la baseline et du RAG.
-5. Adapter le modèle initial avec LoRA/QLoRA.
-6. Comparer la baseline, le RAG et le modèle fine-tuné.
-7. Étudier l'optimisation par préférences (DPO), si réalisable.
+1. Intégrer le retrieval et les citations documentaires à Qwen3-1.7B.
+2. Évaluer le RAG et le comparer à la baseline figée.
+3. Adapter le modèle avec LoRA/QLoRA.
+4. Comparer la baseline, le RAG et les configurations adaptées.
+5. Étudier l'optimisation par préférences (DPO), si réalisable.
+
 
 ## Évaluation du modèle initial
 
@@ -213,18 +215,14 @@ La configuration verrouillée et le jeu de test seront conservés pour comparer 
 
 ## Préparation du corpus documentaire
 
-Le projet comprend un corpus documentaire technique
-construit à partir de la documentation officielle
-OpenCV 4.13.0.
+Le projet comprend un corpus documentaire technique construit à partir de la documentation officielle OpenCV 4.13.0.
 
-Ce corpus a été conçu pour fournir des connaissances
-externes au futur système RAG
+Ce corpus a été conçu pour fournir des connaissances externes au futur système RAG
 (Retrieval-Augmented Generation).
 
 ### Sources documentaires
 
-Sept pages de documentation OpenCV ont été collectées,
-couvrant cinq domaines techniques :
+Sept pages de documentation OpenCV ont été collectées, couvrant cinq domaines techniques :
 
 - Filtrage d'images
 - Morphologie mathématique
@@ -232,9 +230,7 @@ couvrant cinq domaines techniques :
 - Détection et analyse de contours
 - Inspection visuelle industrielle
 
-Le registre documentaire conserve les identifiants,
-les URLs originales, les chemins des fichiers traités
-et leurs empreintes SHA-256.
+Le registre documentaire conserve les identifiants, les URLs originales, les chemins des fichiers traités et leurs empreintes SHA-256.
 
 ### Pipeline de préparation
 
@@ -243,12 +239,10 @@ Le traitement documentaire comprend :
 1. Téléchargement et vérification des documents HTML.
 2. Extraction du contenu technique avec Beautiful Soup.
 3. Conversion du HTML en Markdown structuré.
-4. Préservation des titres, formules mathématiques
-   et exemples de code Python.
+4. Préservation des titres, formules mathématiques et exemples de code Python.
 5. Découpage hiérarchique basé sur les sections Markdown.
 6. Contrôle d'intégrité et de conservation du contenu.
-7. Filtrage des éléments de navigation, exercices
-   et références bibliographiques isolées.
+7. Filtrage des éléments de navigation, exercices et références bibliographiques isolées.
 
 Les illustrations absentes sont explicitement signalées,
 sans générer de descriptions inventées.
@@ -285,9 +279,7 @@ sans générer de descriptions inventées.
 | Segmentation | 9 |
 | **Total** | **55** |
 
-Les chunks retenus ont une longueur moyenne de
-757,5 caractères et une longueur médiane de
-808 caractères.
+Les chunks retenus ont une longueur moyenne de 757,5 caractères et une longueur médiane de 808 caractères.
 
 ### Reproductibilité
 
@@ -307,9 +299,7 @@ Le pipeline génère également :
 - `data/corpus/chunks/chunks.jsonl`
 - `data/corpus/chunks/retrieval_chunks.jsonl`
 
-Les contenus documentaires générés restent locaux
-lorsqu'ils sont exclus par `.gitignore`.
-Le notebook et les métadonnées décrivent leur préparation.
+Les contenus documentaires générés restent locaux lorsqu'ils sont exclus par `.gitignore`. Le notebook et les métadonnées décrivent leur préparation.
 
 Les contrôles SHA-256 permettent de vérifier l'intégrité
 des documents sources, des documents traités et des
@@ -320,15 +310,115 @@ corpus produits.
 - Le corpus contient seulement sept pages OpenCV.
 - La couverture documentaire varie selon les domaines.
 - Les illustrations ne sont pas intégrées au corpus textuel.
-- La taille des chunks est mesurée en caractères,
-  et non en tokens.
+- La taille des chunks est mesurée en caractères, et non en tokens.
 - Le filtrage repose sur des règles structurelles simples.
-- La pertinence du retrieval n'a pas encore été évaluée.
+- Le retrieval a été évalué sur dix questions de développement, mais ses performances sur le jeu de test réservé ne sont pas encore mesurées.
 - Aucun résultat d'inférence RAG n'est encore disponible.
 
-La prochaine phase sera consacrée aux embeddings,
-à l'indexation vectorielle, à l'évaluation du retrieval
-et à l'intégration avec Qwen3-1.7B.
+Le corpus a été encodé, indexé et évalué sur le jeu de développement. Les expériences montrent une bonne récupération des passages directement pertinents lorsqu'ils existent, mais révèlent également des limites de classement et de couverture documentaire.
+
+L'intégration générative avec Qwen3-1.7B reste à réaliser.
+
+
+## Moteur de recherche sémantique (évaluation de développement terminée)
+
+Le pipeline de recherche est développé dans `notebooks/03_retrieval_evaluation.ipynb`.
+
+Il interroge les **55 chunks OpenCV sélectionnés**, à l'aide d'un encodeur multilingue et d'un index vectoriel exact.
+
+### Pipeline implémenté
+
+1. Encoder les questions françaises et les passages OpenCV anglais avec `intfloat/multilingual-e5-small`.
+2. Appliquer les préfixes `query: ` et `passage: ` requis, puis normaliser les vecteurs.
+3. Générer **55 embeddings de 384 dimensions** sur CPU.
+4. Traiter deux passages dépassant 512 tokens par fenêtres et moyenne pondérée de leurs embeddings, sans modifier le corpus d'origine.
+5. Construire un index FAISS exact `IndexFlatIP` et vérifier les scores et le classement Top-3 par comparaison avec NumPy.
+6. Sauvegarder puis recharger les embeddings, identifiants et l'index avec des contrôles SHA-256 et des écritures idempotentes.
+7. Implémenter une recherche Top-k réutilisable, avec titres, sections, URLs OpenCV officielles et citations de type `[S1]`.
+
+**Vérifications exploratoires :** les recherches Top-1, Top-3 et Top-5 ont été testées sur trois questions techniques (neuf recherches au total). Les classements sont stables entre les valeurs de k.
+
+Ces contrôles exploratoires valident la cohérence technique de la recherche. La pertinence documentaire a ensuite été mesurée quantitativement sur le jeu de développement.
+
+### Limites de classement observées
+
+Certains passages classés premiers ne répondent qu'indirectement à la question :
+
+| Question exploratoire | Première section retrouvée | Similarité |
+|---|---|---:|
+| Érosion morphologique | Morphology — Theory | 0,8508 |
+| Filtrage gaussien avant Canny | Filtering — Bilateral Filtering | 0,8457 |
+| Template matching | Contours Hierarchy — RETR_CCOMP | 0,8281 |
+
+Les scores de similarité **ne sont pas des probabilités de pertinence**.
+
+
+### Évaluation quantitative du retrieval
+
+Le jeu d'évaluation figé contient **50 questions** : **10 de développement** et **40 de test réservé**.
+
+Les dix questions de développement ont été annotées sur les 55 chunks du corpus, soit **550 jugements** de pertinence, enregistrés dans `data/evaluation/retrieval_qrels_dev.json`.
+
+Deux conventions sont utilisées :
+
+- **Principale :** notes 1 et 2 pertinentes.
+- **Stricte :** seule la note 2 est pertinente.
+
+Les métriques sont évaluées pour k = 1, 3 et 5.
+
+| Indicateur | Top-1 | Top-3 | Top-5 |
+|---|---:|---:|---:|
+| Precision globale — principale | 0,5000 | 0,3000 | 0,2400 |
+| Recall macro conditionnel — principal | 0,3021 | 0,4583 | 0,6250 |
+| MRR conditionnel — principal | 0,6250 | 0,7292 | 0,7604 |
+| Precision globale — stricte | 0,4000 | 0,2000 | 0,1400 |
+| Recall macro conditionnel — strict | 0,5714 | 0,8571 | 1,0000 |
+| MRR conditionnel — strict | 0,5714 | 0,6905 | 0,7262 |
+
+**Couverture documentaire :**
+
+- Convention principale : 8 questions couvertes sur 10.
+- Convention stricte : 7 questions couvertes sur 10.
+- CV008 : passages partiellement pertinents uniquement.
+- CV009 et CV010 : aucun passage pertinent identifié.
+
+À k = 5, les **7 passages directement pertinents** sont retrouvés pour les questions qui en disposent.
+
+Selon la convention principale, **12 des 21 couples question-chunk pertinents** sont retrouvés dans les Top-5, soit un rappel micro de 57,14 %.
+
+Les moyennes conditionnelles de Recall et de MRR excluent les questions sans passage pertinent. La précision globale inclut les dix questions.
+
+### Analyse des erreurs et limites
+
+L'analyse qualitative montre plusieurs erreurs de classement :
+
+- CV001 : la réponse directement pertinente apparaît au rang 2.
+- CV002 : la réponse directement pertinente apparaît au rang 3.
+- CV007 : l'explication de l'hystérésis de Canny apparaît au rang 4, derrière des passages moins pertinents.
+
+Ces résultats soulignent le compromis entre le rappel documentaire et le bruit introduit lorsque le nombre de passages récupérés augmente.
+
+**Limites :**
+
+- Évaluation réalisée sur seulement dix questions.
+- Jugements humains sans validation inter-annotateurs indépendante.
+- Couverture incomplète du corpus.
+- Effet de l'agrégation des embeddings longs non étudié séparément.
+- Aucune qualité de réponse RAG encore mesurée.
+
+Les scores de similarité ne sont pas des probabilités de pertinence.
+
+Les **40 questions de test réservées** n'ont pas été utilisées pour ajuster le retrieval.
+
+### Reproductibilité
+
+Les annotations de développement sont versionnées dans `data/evaluation/retrieval_qrels_dev.json`.
+
+Les fichiers dérivés d'embeddings, les identifiants et l'index FAISS sont conservés localement dans `outputs/retrieval/`, exclu du versionnement Git.
+
+Le notebook documente les contrôles SHA-256, les sauvegardes idempotentes, les recherches documentaires et les métriques d'évaluation.
+
+**Prochaine étape :** intégrer ce moteur à Qwen3-1.7B, puis comparer les réponses générées avec et sans contexte documentaire.
 
 
 ## Documentation
@@ -337,3 +427,4 @@ et à l'intégration avec Qwen3-1.7B.
 - [Protocole d'évaluation](docs/evaluation_protocol.fr.md)
 - [Notebook d'évaluation de la baseline](notebooks/01_baseline_evaluation.ipynb)
 - [Notebook de préparation du corpus documentaire](notebooks/02_document_corpus.ipynb)
+- [Notebook de recherche sémantique et évaluation](notebooks/03_retrieval_evaluation.ipynb)
