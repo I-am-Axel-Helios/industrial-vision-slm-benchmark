@@ -106,9 +106,9 @@ guarantee the correctness of every reference answer.
 
 ## Project Status
 
-**Current milestone:** Baseline evaluation, OpenCV corpus preparation, and semantic retrieval evaluation completed.
+**Current milestone:** Baseline evaluation of Qwen3-1.7B, OpenCV document corpus preparation, E5 + FAISS semantic retrieval evaluation, and RAG pipeline development completed. Notebook 04 was validated on Google Colab by reusing existing experimental results.
 
-**Next phase:** Integrate retrieved evidence and source citations with Qwen3-1.7B to build and evaluate the RAG pipeline.
+**Next phase:** Fine-tune Qwen3-1.7B using supervised LoRA/QLoRA adaptation, then prepare a controlled comparison between the base model, the RAG pipeline, and the adapted configurations.
 
 
 ### Completed
@@ -134,15 +134,25 @@ guarantee the correctness of every reference answer.
 - Completed relevance annotation for 10 development questions across 55 chunks, totaling 550 judgments.
 - Evaluated retrieval using Precision@k, Recall@k, and MRR for k = 1, 3, and 5.
 - Analyzed ranking errors and identified document coverage limitations.
+- Built a RAG pipeline combining Qwen3-1.7B with the E5 + FAISS retrieval engine.
+- Integrated structured documentary context with `[S1]`, `[S2]`, etc. source citations.
+- Defined and tokenized RAG prompts with thinking mode disabled.
+- Completed 20 experiments on 10 development questions using Top-3 and Top-5 configurations.
+- Implemented persistent generation storage and a resume mechanism to avoid unnecessary regeneration.
+- Manually evaluated 20 responses for factual accuracy and 17 citation-bearing responses for documentary support.
+- Consolidated evaluation results and performed a paired Top-3 versus Top-5 comparison.
+- Verified 80 documentary evidence passages associated with the evaluations.
+- Validated Notebook 04 on Google Colab: all 34 Python cells executed without errors, reusing the 20 existing generations.
+
 
 
 ### Next Steps
 
-1. Integrate retrieved evidence and source citations with Qwen3-1.7B.
-2. Evaluate RAG and compare it against the frozen baseline.
-3. Fine-tune the base model using LoRA/QLoRA.
-4. Compare baseline, RAG, and fine-tuned configurations.
-5. Explore preference optimization (DPO), if feasible.
+1. Prepare supervised fine-tuning of Qwen3-1.7B using LoRA/QLoRA.
+2. Build and evaluate the adapted model configurations.
+3. Prepare a controlled comparison of the baseline, RAG pipeline, and fine-tuned models using comparable questions and evaluation criteria.
+4. Study trade-offs between response quality, latency, memory consumption, and inference cost.
+5. Explore preference optimization (DPO), if resources and previous experimental results allow.
 
 
 ## Baseline Evaluation
@@ -222,7 +232,9 @@ The finalized quality results are stored in:
 - `baseline_test_v1_quality_scores_final.json`
 - `baseline_test_v1_quality_summary.json`
 
-The locked configuration and test set will be preserved for future RAG and fine-tuning comparisons.
+The locked configuration and baseline results on the 40-question test set are preserved as a reference for future comparisons.
+
+Notebook 04 RAG results are based exclusively on the ten development questions and use a different evaluation rubric. They therefore do not yet constitute a direct comparison with the baseline test results.
 
 **Limitations:** the test set is relatively small, quality scores rely on manual assessment, and runtime performance depends on the execution environment.
 
@@ -232,7 +244,7 @@ The project includes a specialized technical corpus built from the official Open
 
 The corpus has been embedded, indexed, and evaluated on the development split. Results demonstrate effective retrieval of directly relevant passages when available, while highlighting ranking errors and incomplete document coverage.
 
-Integration with Qwen3-1.7B remains future work.
+The corpus has been integrated with Qwen3-1.7B in the Notebook 04 RAG pipeline, which was evaluated on the development split.
 
 
 ### Data Sources
@@ -327,7 +339,7 @@ processed documents, and the resulting corpora.
 - Chunk sizes are measured in characters rather than tokens.
 - The retrieval filtering policy uses simple structural rules.
 - Retrieval has been evaluated on ten development questions, but its performance on the held-out test split has not yet been measured.
-- No RAG inference results are available yet.
+- RAG generation has been evaluated on the ten development questions; evaluation on the 40-question held-out test split remains future work.
 
 ## Semantic Retrieval Engine (Development Evaluation Completed)
 
@@ -413,7 +425,7 @@ These findings highlight the trade-off between document recall and irrelevant co
 - Human relevance judgments without independent inter-annotator validation.
 - Incomplete document coverage.
 - No isolated evaluation of long-passage embedding aggregation.
-- RAG answer quality has not yet been measured.
+- RAG answer quality was evaluated in Notebook 04 on the development split only; performance on the held-out test split remains to be assessed.
 
 Similarity scores are not relevance probabilities.
 
@@ -428,7 +440,125 @@ Generated embeddings, chunk identifiers, and the FAISS index remain local in the
 
 The notebook documents SHA-256 integrity checks, idempotent saves, retrieval experiments, and evaluation metrics.
 
-**Next milestone:** integrate the retrieval engine with Qwen3-1.7B and compare generated answers with and without retrieved evidence.
+**Completed integration:** the E5 + FAISS retrieval engine is used by the Notebook 04 RAG pipeline. Top-3 and Top-5 configurations were evaluated on the development split. A direct comparison against the baseline and future adapted models still requires a common experimental protocol.
+
+
+## RAG Pipeline — Development and Evaluation Completed
+
+The RAG pipeline is implemented in `notebooks/04_rag_evaluation.ipynb`.
+
+It combines the Qwen3-1.7B language model with the E5 + FAISS semantic retrieval engine to generate technical answers grounded in the OpenCV documentation.
+
+### System Architecture
+
+The pipeline follows these steps:
+
+1. Receive a technical question in French.
+2. Encode the question using `intfloat/multilingual-e5-small`.
+3. Retrieve relevant passages from the FAISS index.
+4. Build documentary context with `[S1]`, `[S2]`, etc. source references.
+5. Construct and tokenize the RAG prompt.
+6. Generate an answer using `Qwen/Qwen3-1.7B`, with thinking mode disabled.
+7. Persist the answer, experimental parameters, and documentary references.
+8. Manually evaluate factual accuracy and documentary support.
+
+The system reuses the 55 OpenCV retrieval chunks, their 384-dimensional embeddings, and the previously validated `IndexFlatIP` index without modifying the documentary corpus.
+
+### Experimental Protocol
+
+The experiments use ten development questions, each evaluated with two retrieval configurations:
+
+- **Top-3:** three retrieved documentary passages.
+- **Top-5:** five retrieved documentary passages.
+
+A total of 20 RAG responses are available.
+
+Manual assessment uses two criteria:
+
+- **Factual accuracy:** score from 0 to 5.
+- **Documentary support:** score from 0 to 2, applied only to responses containing citations.
+
+Factual accuracy was evaluated for all 20 responses. Documentary support was evaluated for the 17 responses containing at least one citation.
+
+The 80 experiment-to-passage associations were preserved to support source verification.
+
+The 40 held-out test questions were not used to tune the RAG pipeline.
+
+### Reference Experiment Results
+
+| Metric | Top-3 | Top-5 |
+|---|---:|---:|
+| Evaluated responses | 10 | 10 |
+| Total factual score | 32/50 | 38/50 |
+| Mean factual accuracy | 3.20/5 | 3.80/5 |
+| Responses containing citations | 8/10 | 9/10 |
+| Mean documentary support | 1.00/2 | 1.44/2 |
+| Insufficient support (0/2) | 1 | 0 |
+| Partial support (1/2) | 6 | 5 |
+| Complete support (2/2) | 1 | 4 |
+
+Documentary support averages are calculated only over responses containing citations. The three responses without citations are not automatically assigned a score of 0/2.
+
+Across the ten evaluated questions, Top-5 improved factual scores for five questions and tied Top-3 on the remaining five.
+
+Mean factual accuracy increased from 3.20/5 to 3.80/5. Mean documentary support increased from 1.00/2 to 1.44/2.
+
+These findings are limited to the reference experiment and do not establish statistically generalizable superiority of Top-5.
+
+### Persistence and Reproducibility
+
+The notebook supports three execution modes:
+
+- `auto`: reuse all 20 responses when available; otherwise generate missing responses.
+- `reuse`: use existing generations only.
+- `generate_missing`: preserve existing results and generate missing responses.
+
+Generating new responses requires a compatible CUDA GPU. Reusing existing results does not require loading the generative model weights onto a GPU.
+
+Generated responses are stored in:
+
+`outputs/rag/dev_runs/`
+
+Evaluation artifacts are stored in:
+
+`outputs/rag/analysis/`
+
+The main annotation files are:
+
+- `rag_human_review_dev.csv`: persistent manual evaluation sheet.
+- `rag_review_mapping_dev.json`: mapping between review identifiers and experiments.
+- `rag_source_evidence_dev.csv`: documentary evidence associated with responses.
+
+Human scores are never assigned automatically. Evaluation statistics are calculated only when the required annotations are available.
+
+Existing generation and annotation files are preserved during compatible resumed executions.
+
+Notebook 04 was validated on Google Colab in reuse mode:
+
+- All 34 Python cells executed without errors.
+- All 20 RAG generations were reused.
+- No new generation was required.
+- All 20 factual assessments were verified.
+- All 17 documentary assessments were verified.
+- The final validation in section 5 succeeded.
+
+A complete from-scratch execution on an independent installation has not yet been validated.
+
+The nine required documentary artifacts must be available before execution. They can be prepared using the previous notebooks or provided through the `rag_colab_assets.zip` archive.
+
+Generated results and annotations are stored in persistent output directories. Reproducing the reference evaluation on another environment requires access to these artifacts, which are not necessarily tracked by Git.
+
+### Limitations and Future Work
+
+- Evaluation limited to ten development questions.
+- Documentary corpus restricted to seven OpenCV pages.
+- Human judgments without independent inter-annotator validation.
+- Citations sometimes provide only partial or insufficient support.
+- No direct comparison against the baseline using the same questions and scoring criteria.
+- Inference cost and memory consumption were not systematically compared between Top-3 and Top-5.
+- RAG performance has not yet been evaluated on the 40-question held-out test split.
+
+The next phase will focus on adapting Qwen3-1.7B with LoRA/QLoRA, followed by a controlled comparison against the reference configurations.
 
 ## Documentation
 
@@ -437,3 +567,4 @@ The notebook documents SHA-256 integrity checks, idempotent saves, retrieval exp
 - [Baseline Evaluation Notebook](notebooks/01_baseline_evaluation.ipynb)
 - [Document Corpus Preparation Notebook](notebooks/02_document_corpus.ipynb)
 - [Semantic Retrieval and Evaluation Notebook](notebooks/03_retrieval_evaluation.ipynb)
+- [RAG Pipeline Construction and Evaluation Notebook](notebooks/04_rag_evaluation.ipynb)

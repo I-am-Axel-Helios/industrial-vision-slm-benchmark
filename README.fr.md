@@ -95,9 +95,9 @@ Ces contrôles garantissent la cohérence structurelle et permettent de détecte
 
 ## État du projet
 
-**Étape actuelle :** évaluation initiale, construction du corpus documentaire et évaluation du moteur de recherche sémantique terminées.
+**Étape actuelle :** évaluation initiale de Qwen3-1.7B, préparation du corpus documentaire OpenCV, évaluation du moteur de recherche E5 + FAISS et construction du pipeline RAG terminées. Le Notebook 04 a été validé sur Google Colab en réutilisant les résultats expérimentaux existants.
 
-**Prochaine phase :** intégrer les passages retrouvés et leurs citations à Qwen3-1.7B pour construire et évaluer le pipeline RAG.
+**Prochaine phase :** adapter Qwen3-1.7B par fine-tuning supervisé avec LoRA/QLoRA, puis préparer une comparaison contrôlée entre le modèle initial, le RAG et les configurations adaptées.
 
 ### Terminé
 - Configuration de l'environnement GPU Google Colab.
@@ -122,13 +122,24 @@ Ces contrôles garantissent la cohérence structurelle et permettent de détecte
 - Annotation de 10 questions de développement sur 55 chunks, soit 550 jugements de pertinence.
 - Évaluation quantitative du retrieval avec Precision@k, Recall@k et MRR pour k = 1, 3 et 5.
 - Analyse des erreurs de classement et identification des limites de couverture documentaire.
+- Construction du pipeline RAG associant Qwen3-1.7B au moteur E5 + FAISS.
+- Intégration d'un contexte documentaire structuré avec citations `[S1]`, `[S2]`, etc.
+- Définition et tokenisation des prompts RAG avec le mode thinking désactivé.
+- Réalisation de 20 expériences sur les 10 questions de développement, en configurations Top-3 et Top-5.
+- Sauvegarde persistante des générations et mécanisme de reprise sans régénération inutile.
+- Évaluation humaine de 20 réponses pour l'exactitude factuelle et de 17 réponses contenant des citations pour la justification documentaire.
+- Consolidation des résultats et comparaison appariée des configurations Top-3 et Top-5.
+- Vérification des 80 passages documentaires associés aux évaluations.
+- Validation du Notebook 04 sur Google Colab : 34 cellules Python exécutées sans erreur, avec réutilisation des 20 générations existantes.
+
 
 ### Prochaines étapes
-1. Intégrer le retrieval et les citations documentaires à Qwen3-1.7B.
-2. Évaluer le RAG et le comparer à la baseline figée.
-3. Adapter le modèle avec LoRA/QLoRA.
-4. Comparer la baseline, le RAG et les configurations adaptées.
-5. Étudier l'optimisation par préférences (DPO), si réalisable.
+
+1. Préparer le fine-tuning supervisé de Qwen3-1.7B avec LoRA/QLoRA.
+2. Construire et évaluer les configurations adaptées du modèle.
+3. Préparer une comparaison contrôlée entre la baseline, le RAG et les modèles adaptés, avec des questions et des critères d'évaluation comparables.
+4. Étudier les compromis entre qualité des réponses, latence, consommation mémoire et coût d'inférence.
+5. Explorer l'optimisation par préférences (DPO), si les ressources et les résultats précédents le permettent.
 
 
 ## Évaluation du modèle initial
@@ -208,7 +219,10 @@ Les résultats définitifs sont enregistrés dans :
 - `baseline_test_v1_quality_scores_final.json`
 - `baseline_test_v1_quality_summary.json`
 
-La configuration verrouillée et le jeu de test seront conservés pour comparer les futures approches RAG et fine-tuning.
+La configuration verrouillée et les résultats de la baseline sur les 40 questions de test sont conservés comme référence pour les comparaisons futures.
+
+Les résultats RAG du Notebook 04 portent uniquement sur les dix questions de développement et reposent sur une grille d'évaluation distincte. Ils ne constituent donc pas encore une comparaison directe avec les résultats de la baseline sur le jeu de test.
+
 
 **Limites :** le jeu de test est relativement petit, les notes reposent sur une évaluation manuelle et les performances d'exécution dépendent de l'environnement matériel.
 
@@ -217,8 +231,7 @@ La configuration verrouillée et le jeu de test seront conservés pour comparer 
 
 Le projet comprend un corpus documentaire technique construit à partir de la documentation officielle OpenCV 4.13.0.
 
-Ce corpus a été conçu pour fournir des connaissances externes au futur système RAG
-(Retrieval-Augmented Generation).
+Ce corpus fournit les connaissances documentaires externes au pipeline RAG (Retrieval-Augmented Generation) implémenté dans le Notebook 04.
 
 ### Sources documentaires
 
@@ -313,11 +326,11 @@ corpus produits.
 - La taille des chunks est mesurée en caractères, et non en tokens.
 - Le filtrage repose sur des règles structurelles simples.
 - Le retrieval a été évalué sur dix questions de développement, mais ses performances sur le jeu de test réservé ne sont pas encore mesurées.
-- Aucun résultat d'inférence RAG n'est encore disponible.
+- L'évaluation générative RAG a été réalisée sur les dix questions de développement ; son évaluation sur les 40 questions de test reste à effectuer.
 
 Le corpus a été encodé, indexé et évalué sur le jeu de développement. Les expériences montrent une bonne récupération des passages directement pertinents lorsqu'ils existent, mais révèlent également des limites de classement et de couverture documentaire.
 
-L'intégration générative avec Qwen3-1.7B reste à réaliser.
+L'intégration générative avec Qwen3-1.7B a été réalisée et évaluée dans le Notebook 04. Les résultats sont présentés dans la section consacrée au pipeline RAG.
 
 
 ## Moteur de recherche sémantique (évaluation de développement terminée)
@@ -404,7 +417,7 @@ Ces résultats soulignent le compromis entre le rappel documentaire et le bruit 
 - Jugements humains sans validation inter-annotateurs indépendante.
 - Couverture incomplète du corpus.
 - Effet de l'agrégation des embeddings longs non étudié séparément.
-- Aucune qualité de réponse RAG encore mesurée.
+- La qualité des réponses RAG a été évaluée dans le Notebook 04 uniquement sur le jeu de développement ; son évaluation sur le jeu de test reste à effectuer.
 
 Les scores de similarité ne sont pas des probabilités de pertinence.
 
@@ -418,8 +431,125 @@ Les fichiers dérivés d'embeddings, les identifiants et l'index FAISS sont cons
 
 Le notebook documente les contrôles SHA-256, les sauvegardes idempotentes, les recherches documentaires et les métriques d'évaluation.
 
-**Prochaine étape :** intégrer ce moteur à Qwen3-1.7B, puis comparer les réponses générées avec et sans contexte documentaire.
+**Intégration réalisée :** le moteur E5 + FAISS est utilisé par le pipeline RAG du Notebook 04. Les configurations Top-3 et Top-5 ont été évaluées sur le jeu de développement. Une comparaison directe avec la baseline et les futurs modèles adaptés reste à réaliser selon un protocole commun.
 
+
+## Pipeline RAG — Construction et évaluation terminées
+
+Le pipeline RAG est développé dans `notebooks/04_rag_evaluation.ipynb`.
+
+Il combine le modèle génératif Qwen3-1.7B et le moteur de recherche sémantique E5 + FAISS pour produire des réponses techniques appuyées sur la documentation OpenCV.
+
+### Architecture du système
+
+Le pipeline comprend :
+
+1. Réception d'une question technique en français.
+2. Encodage de la question avec `intfloat/multilingual-e5-small`.
+3. Recherche des passages pertinents dans l'index FAISS.
+4. Construction d'un contexte documentaire avec références `[S1]`, `[S2]`, etc.
+5. Construction et tokenisation du prompt RAG.
+6. Génération de la réponse avec `Qwen/Qwen3-1.7B`, mode thinking désactivé.
+7. Sauvegarde de la réponse, des paramètres et des références documentaires.
+8. Évaluation humaine de l'exactitude factuelle et des justifications documentaires.
+
+Le système réutilise les 55 chunks OpenCV, les embeddings de 384 dimensions et l'index `IndexFlatIP` préparés précédemment, sans modifier le corpus documentaire.
+
+### Protocole expérimental
+
+Les expériences utilisent les dix questions du jeu de développement, chacune évaluée avec deux configurations :
+
+- **Top-3 :** trois passages documentaires récupérés.
+- **Top-5 :** cinq passages documentaires récupérés.
+
+Au total, 20 réponses RAG sont disponibles.
+
+La notation humaine repose sur deux critères :
+
+- **Exactitude factuelle :** note de 0 à 5.
+- **Justification documentaire :** note de 0 à 2, uniquement pour les réponses contenant des citations.
+
+Les évaluations factuelles sont réalisées sur les 20 réponses. Les évaluations documentaires concernent les 17 réponses contenant au moins une citation.
+
+Les 80 associations entre expériences et passages récupérés sont conservées pour permettre la vérification des sources.
+
+Les 40 questions du jeu de test n'ont pas été utilisées pour ajuster ce pipeline RAG.
+
+### Résultats de l'expérience de référence
+
+| Indicateur | Top-3 | Top-5 |
+|---|---:|---:|
+| Réponses évaluées | 10 | 10 |
+| Score factuel total | 32/50 | 38/50 |
+| Exactitude factuelle moyenne | 3,20/5 | 3,80/5 |
+| Réponses contenant des citations | 8/10 | 9/10 |
+| Justification documentaire moyenne | 1,00/2 | 1,44/2 |
+| Justifications insuffisantes (0/2) | 1 | 0 |
+| Justifications partielles (1/2) | 6 | 5 |
+| Justifications complètes (2/2) | 1 | 4 |
+
+Les moyennes documentaires sont calculées uniquement sur les réponses contenant des citations. Les trois réponses sans citation ne reçoivent pas automatiquement la note 0/2.
+
+Sur les dix questions étudiées, le Top-5 améliore la note factuelle pour cinq questions et obtient une note identique sur les cinq autres.
+
+La moyenne factuelle passe de 3,20/5 à 3,80/5. La moyenne documentaire passe de 1,00/2 à 1,44/2.
+
+Ces observations concernent exclusivement l'expérience de référence et ne démontrent pas une supériorité statistiquement généralisable du Top-5.
+
+### Sauvegarde et reproductibilité
+
+Le notebook utilise trois modes d'exécution :
+
+- `auto` : réutilise les vingt réponses si elles sont disponibles ; sinon, génère les réponses manquantes.
+- `reuse` : exploite uniquement les générations existantes.
+- `generate_missing` : conserve les résultats existants et génère les réponses absentes.
+
+Une génération nécessite un GPU CUDA compatible. La réutilisation des résultats existants ne nécessite pas de charger les poids du modèle génératif sur GPU.
+
+Les résultats sont sauvegardés dans :
+
+`outputs/rag/dev_runs/`
+
+Les fichiers d'évaluation sont conservés dans :
+
+`outputs/rag/analysis/`
+
+Les principaux fichiers d'annotation sont :
+
+- `rag_human_review_dev.csv` : grille persistante d'évaluation humaine.
+- `rag_review_mapping_dev.json` : correspondances entre évaluations et expériences.
+- `rag_source_evidence_dev.csv` : passages documentaires associés aux réponses.
+
+Les annotations humaines ne sont jamais attribuées automatiquement. Les statistiques correspondantes sont calculées uniquement lorsque les évaluations requises sont disponibles.
+
+Les fichiers de génération et d'annotation existants sont préservés lors des reprises compatibles.
+
+Le Notebook 04 a été validé sur Google Colab en mode reprise :
+
+- 34 cellules Python exécutées sans erreur.
+- 20 générations RAG réutilisées.
+- Aucune nouvelle génération nécessaire.
+- 20 évaluations factuelles vérifiées.
+- 17 évaluations documentaires vérifiées.
+- Contrôle final de la section 5 réussi.
+
+Une exécution complète depuis zéro sur une installation indépendante n'a pas encore été validée.
+
+Les neuf artefacts documentaires nécessaires doivent être disponibles avant l'exécution. Ils peuvent être préparés à partir des notebooks précédents ou fournis au moyen de l'archive `rag_colab_assets.zip`.
+
+Les résultats générés et les annotations sont conservés dans les répertoires de sortie persistants. Leur disponibilité sur un autre environnement dépend de la récupération de ces fichiers, qui ne sont pas nécessairement versionnés dans Git.
+
+### Limites et perspectives
+
+- Évaluation limitée à dix questions de développement.
+- Corpus documentaire restreint à sept pages OpenCV.
+- Notation humaine sans validation inter-annotateurs indépendante.
+- Qualité des citations parfois insuffisante ou partielle.
+- Absence de comparaison directe avec la baseline sur les mêmes questions et selon les mêmes critères.
+- Coût d'inférence et consommation mémoire non comparés systématiquement entre Top-3 et Top-5.
+- Aucune évaluation RAG réalisée sur les 40 questions du jeu de test.
+
+La prochaine phase consistera à adapter Qwen3-1.7B avec LoRA/QLoRA, puis à préparer une comparaison contrôlée avec les configurations de référence.
 
 ## Documentation
 
@@ -428,3 +558,4 @@ Le notebook documente les contrôles SHA-256, les sauvegardes idempotentes, les 
 - [Notebook d'évaluation de la baseline](notebooks/01_baseline_evaluation.ipynb)
 - [Notebook de préparation du corpus documentaire](notebooks/02_document_corpus.ipynb)
 - [Notebook de recherche sémantique et évaluation](notebooks/03_retrieval_evaluation.ipynb)
+- [Notebook de construction et d'évaluation du pipeline RAG](notebooks/04_rag_evaluation.ipynb)
